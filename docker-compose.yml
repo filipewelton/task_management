@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  database:
+    container_name: task_management_database
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    restart: always
+
+  notifier:
+    container_name: task_management_notifier
+    image: rabbitmq:management-alpine
+    environment:
+      - RABBITMQ_DEFAULT_USER=rabbitmq
+      - RABBITMQ_DEFAULT_PASS=rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: always
+    hostname: rabbit
