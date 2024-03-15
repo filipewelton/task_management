@@ -1,5 +1,5 @@
 defmodule TaskManagement.Services.Notification.Sender.Call3Test do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias TaskManagement.Services.Notification.{Recipient, Sender}
 
@@ -34,20 +34,37 @@ defmodule TaskManagement.Services.Notification.Sender.Call3Test do
 
   test "when the message is sent to a specific user" do
     payload = ~s({
-        "sender_id": "#{@sender_id}",
-        "message": "#{Faker.Lorem.sentence()}",
-        "date": "#{DateTime.utc_now()}"
-      })
+      "sender_id": "#{@sender_id}",
+      "message": "#{Faker.Lorem.sentence()}",
+      "date": "#{DateTime.utc_now()}"
+    })
 
     :ok = Sender.call(@board_id, @user_id_2, payload)
-    :timer.sleep(100)
     {:ok, list_1} = Recipient.get_notifications(:server_1)
     {:ok, list_2} = Recipient.get_notifications(:server_2)
 
     assert list_1 == []
-    assert is_list(list_2)
     assert length(list_2) == 1
 
     Recipient.stop(:server_1)
+    Recipient.stop(:server_2)
+  end
+
+  test "when the message is sent to all members" do
+    payload = ~s({
+      "sender_id": "#{Faker.UUID.v4()}",
+      "message": "#{Faker.Lorem.sentence()}",
+      "date": "#{DateTime.utc_now()}"
+    })
+
+    :ok = Sender.call(@board_id, payload)
+    {:ok, list_1} = Recipient.get_notifications(:server_1)
+    {:ok, list_2} = Recipient.get_notifications(:server_2)
+
+    assert length(list_1) == 1
+    assert length(list_2) == 2
+
+    Recipient.stop(:server_1)
+    Recipient.stop(:server_2)
   end
 end
